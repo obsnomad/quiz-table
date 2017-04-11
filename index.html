@@ -1,0 +1,52 @@
+<!doctype html>
+<html class="no-js" lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Генератор таблицы результатов</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<div class="col-md-3 col-sm-4 col-xs-12" style="margin: 15px 0;">
+    <label class="btn btn-primary btn-block btn-file">
+        Загрузить список команд <input type="file" style="display: none;" id="btn-teams-list">
+    </label>
+    <h4>Архив команд</h4>
+    <ul id="teams-list"></ul>
+    <div class="input-group" style="margin: 15px 0;">
+        <input type="text" class="form-control" placeholder="Добавить команду" id="btn-team-add-text">
+        <span class="input-group-btn">
+            <button class="btn btn-primary" type="button" id="btn-team-add">
+                <span class="glyphicon glyphicon-plus"></span>
+            </button>
+        </span>
+    </div>
+</div>
+<div class="col-md-9 col-sm-8 col-xs-12" style="margin: 15px 0;">
+    <div class="row">
+        <label class="col-sm-6 col-xs-12">
+            Название игры:
+            <input type="text" class="form-control">
+        </label>
+    </div>
+    <div class="row">
+        <label class="col-sm-6 col-xs-12">
+            Вид игры:
+            <select class="form-control" id="games-list"></select>
+        </label>
+    </div>
+    <table id="table-list"></table>
+</div>
+
+<script src="js/vendor/jquery-1.12.0.min.js"></script>
+<script src="js/vendor/bootstrap.min.js"></script>
+<script src="js/vendor/bootbox.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
