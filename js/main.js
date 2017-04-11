@@ -10,15 +10,13 @@ function array_unique(arr) {
 
 function fillListFromStorage() {
     var data = localStorage.getItem('teams-list');
-    if (data) {
-        data = JSON.parse(data);
-    }
+    data = data ? JSON.parse(data) : [];
     if (data.length > 0) {
         var ul = $('#teams-list').html('');
         for (var i in data) {
             var text = data[i].trim();
             var li = $('<li>', {
-                title: 'Добавить/убрать',
+                title: 'Добавить/убрать'
             }).data('text', text);
             var edit = $('<a>', {
                 class: 'team-btn team-edit'
