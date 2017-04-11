@@ -94,7 +94,14 @@ function addListItem() {
 
 function changeRule() {
     var select = $('#games-list');
-    console.log(select);
+    var current = $('option[value=' + select.val() + ']', select);
+    localStorage.setItem('rule', JSON.stringify(current.data('rule')));
+    getRule();
+}
+
+function getRule() {
+    var data = localStorage.getItem('rule');
+    return data ? JSON.parse(data) : {};
 }
 
 bootbox.setDefaults({
@@ -125,12 +132,12 @@ $(function () {
     if(config && config.rules) {
         config.rules.forEach(function(rule, i) {
             var option = $('<option>', {
-                value: i
-            }).text(rule.name).data('rule', rule).click(function() {
-                changeRule();
-            });
+                value: i,
+                selected: getRule() && getRule().name === rule.name
+            }).text(rule.name).data('rule', rule);
             $('#games-list').append(option);
         });
     }
+    $('#games-list').change(changeRule);
     changeRule();
 });
