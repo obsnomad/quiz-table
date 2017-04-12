@@ -91,4 +91,36 @@ li:hover .team-btn {
     width: 100%;
 }
 
+#table-list {
+    width: 100%;
+    margin-top: 15px;
+}
+
+#table-list th,
+#table-list td {
+    border: 1px solid #eee;
+    padding: 4px 8px;
+    text-align: center;
+    width: 64px;
+}
+
+#table-list th:first-child,
+#table-list td:first-child {
+    text-align: left;
+    width: auto;
+}
+
+#table-list tr:hover td {
+    background-color: #eee;
+}
+
+#table-list input {
+    text-align: center;
+}
+
+#canvas {
+    max-width: 100%;
+    height: auto;
+    margin: 15px 0 0;
+}
 

@@ -31,7 +31,7 @@
     <div class="row">
         <label class="col-sm-6 col-xs-12">
             Название игры:
-            <input type="text" class="form-control">
+            <input type="text" class="form-control" id="game-name">
         </label>
     </div>
     <div class="row">
@@ -41,6 +41,10 @@
         </label>
     </div>
     <table id="table-list"></table>
+    <div style="margin: 15px 0 0;">
+        <button class="btn btn-primary" id="generate-image">Создать изображение</button>
+    </div>
+    <canvas id="canvas" width="1920" height="1080"></canvas>
 </div>
 
 <script src="js/vendor/jquery-1.12.0.min.js"></script>
