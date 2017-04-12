@@ -271,7 +271,7 @@ $(function () {
     $('#generate-image').click(function () {
         var data = getTable();
         if (data.length > 0) {
-            var width = 64;
+            var width = 40;
             var padding = 10;
             var curRound = 0;
             // Определить текущий раунд (отсчёт от 1)
@@ -405,10 +405,11 @@ $(function () {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             var cdata = '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">\
                 <foreignObject width="100%" height="100%" style="background: ' + style.background + '; color: ' + style.color + ';">\
-                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-size: 32px; font-family: ' + style.fontFamily + '; padding: ' + padding + 'px;">\
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-size: 22px; font-family: ' + style.fontFamily + '; padding: ' + padding + 'px;">\
                         <style>\
                             th, td {\
                                 padding: 4px 8px;\
+                                vertical-align: top;\
                             }\
                             table, th, td {\
                                 border: ' + style.border + ';\
