@@ -146,15 +146,39 @@ function calcSum(parent) {
     $('.table-item-sum', parent).text(sum);
 }
 
+function addCellWithInput(tr, data, i, j, item) {
+    $('<td>').appendTo(tr).append($('<input>', {
+        type: 'text',
+        class: 'form-control'
+    }).keyup(function () {
+        calcSum($(this).parents('tr'));
+        if (!data[i].rounds) {
+            data[i].rounds = [];
+        }
+        var val = parseFloat($(this).val());
+        val = isNaN(val) ? '' : val;
+        data[i].rounds[j] = val;
+        saveTableToStorage(data);
+        var canvas = document.getElementById('canvas');
+        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+    }).val(item.rounds && item.rounds[j] ? item.rounds[j] : ''));
+}
+
 function fillTableFromStorage() {
     var table = $('#table-list').html('');
     var tr = $('<tr>').appendTo(table);
     $('<th>').appendTo(tr).text('Команда');
-    if (getRule()) {
-        getRule().rounds.forEach(function (round) {
+    var rule = getRule();
+    rule.rounds.forEach(function (round) {
+        if(typeof round === 'object') {
+            round.subrounds.forEach(function(subround) {
+                $('<th>').appendTo(tr).text(subround);
+            })
+        }
+        else {
             $('<th>').appendTo(tr).text(round);
-        });
-    }
+        }
+    });
     $('<th>').appendTo(tr).text('Сумма');
     var data = getTable();
     if (data.length > 0) {
@@ -163,25 +187,17 @@ function fillTableFromStorage() {
                 'data-text': item.name
             }).appendTo(table).data('text', item.name);
             $('<td>').appendTo(tr).text(item.name);
-            if (getRule()) {
-                getRule().rounds.forEach(function (round, j) {
-                    $('<td>').appendTo(tr).append($('<input>', {
-                        type: 'text',
-                        class: 'form-control'
-                    }).keyup(function () {
-                        calcSum($(this).parents('tr'));
-                        if (!data[i].rounds) {
-                            data[i].rounds = [];
-                        }
-                        var val = parseFloat($(this).val());
-                        val = isNaN(val) ? '' : val;
-                        data[i].rounds[j] = val;
-                        saveTableToStorage(data);
-                        var canvas = document.getElementById('canvas');
-                        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-                    }).val(item.rounds && item.rounds[j] ? item.rounds[j] : ''));
-                });
-            }
+            var j = 0;
+            rule.rounds.forEach(function (round) {
+                if(typeof round === 'object') {
+                    round.subrounds.forEach(function() {
+                        addCellWithInput(tr, data, i, j++, item);
+                    });
+                }
+                else {
+                    addCellWithInput(tr, data, i, j++, item);
+                }
+            });
             $('<td>', {
                 class: 'table-item-sum'
             }).appendTo(tr);
@@ -274,6 +290,8 @@ $(function () {
             var width = 40;
             var padding = 10;
             var curRound = 0;
+            var curRoundSum = 0;
+            var rule = getRule();
             // Определить текущий раунд (отсчёт от 1)
             data.forEach(function (item) {
                 if (item.rounds) {
@@ -291,16 +309,43 @@ $(function () {
                 if (!data[i].rounds) {
                     data[i].rounds = [];
                 }
-                for (var j = 0; j < curRound; j++) {
-                    var val = item.rounds && item.rounds[j] ? parseFloat(item.rounds[j]) : 0;
-                    val = isNaN(val) ? 0 : val;
-                    sum += val;
-                    if (!data[i].rounds) {
-                        data[i].rounds = [];
+                var j = 0;
+                rule.rounds.forEach(function(round, k) {
+                    if(j < curRound) {
+                        curRoundSum = Math.max(curRoundSum, k);
+                        if(typeof round === 'object') {
+                            var roundsSum = 0;
+                            round.subrounds.forEach(function() {
+                                var val = item.rounds && item.rounds[j] ? parseFloat(item.rounds[j]) : 0;
+                                val = isNaN(val) ? 0 : val;
+                                data[i].rounds[j] = val;
+                                roundsSum += val;
+                                j++;
+                            });
+                            sum += roundsSum;
+                            if (!data[i].roundsSum) {
+                                data[i].roundsSum = [];
+                            }
+                            data[i].roundsSum[j] = roundsSum;
+                            checksum += roundsSum;
+                        }
+                        else {
+                            var val = item.rounds && item.rounds[j] ? parseFloat(item.rounds[j]) : 0;
+                            val = isNaN(val) ? 0 : val;
+                            sum += val;
+                            if (!data[i].roundsSum) {
+                                data[i].roundsSum = [];
+                            }
+                            data[i].rounds[j] = val;
+                            data[i].roundsSum[j] = val;
+                            checksum += val;
+                            j++;
+                        }
                     }
-                    data[i].rounds[j] = val;
-                    checksum += val;
-                }
+                    else {
+                        return false;
+                    }
+                });
                 data[i].sum = sum;
                 data[i].checksum = checksum + sum;
                 data[i].rounds.splice(curRound);
@@ -314,11 +359,13 @@ $(function () {
                 if (a.sum > b.sum) {
                     return -1;
                 }
-                for (var i = curRound; i > 0; i--) {
-                    if (a.rounds[i] < b.rounds[i]) {
+                for (var i = curRoundSum; i > 0; i--) {
+                    var roundsSumA = a.roundsSum[i] ? a.roundsSum[i] : 0;
+                    var roundsSumB = b.roundsSum[i] ? b.roundsSum[i] : 0;
+                    if (roundsSumA < roundsSumB) {
                         return 1;
                     }
-                    if (a.rounds[i] > b.rounds[i]) {
+                    if (roundsSumA > roundsSumB) {
                         return -1;
                     }
                 }
@@ -328,7 +375,6 @@ $(function () {
                 placeGroups[a.checksum]++;
                 return compareTableItems(a, b);
             });
-            var rule = getRule();
             var table = $('<table>', {
                 width: '100%'
             });
@@ -343,13 +389,23 @@ $(function () {
                 align: 'left',
                 width: canvas.width - padding - width * (2 + rule.rounds.length)
             }).appendTo(tr).text('Команда');
-            if (rule) {
-                rule.rounds.forEach(function (round) {
+            rule.rounds.forEach(function (round) {
+                if(typeof round === 'object') {
+                    round.subrounds.forEach(function(subround) {
+                        $('<th>', {
+                            width: width
+                        }).appendTo(tr).html(subround);
+                    });
                     $('<th>', {
                         width: width
-                    }).appendTo(tr).text(round);
-                });
-            }
+                    }).appendTo(tr).html(round.name);
+                }
+                else {
+                    $('<th>', {
+                        width: width
+                    }).appendTo(tr).html(round);
+                }
+            });
             $('<th>', {
                 width: width
             }).appendTo(tr).text('Сумма');
@@ -380,16 +436,28 @@ $(function () {
                 $('<td>', {
                     align: 'left'
                 }).appendTo(tr).text(item.name);
-                if (getRule()) {
-                    getRule().rounds.forEach(function (round, j) {
+                var j = 0;
+                rule.rounds.forEach(function (round) {
+                    if(typeof round === 'object') {
+                        var sum = 0;
+                        round.subrounds.forEach(function() {
+                            var value = item.rounds[j++];
+                            sum += parseFloat(value);
+                            $('<td>', {
+                                align: 'center'
+                            }).appendTo(tr).text(value);
+                        });
                         $('<td>', {
-                            class: 'table-item-value',
                             align: 'center'
-                        }).appendTo(tr).text(item.rounds[j]);
-                    });
-                }
+                        }).appendTo(tr).text(isNaN(sum) ? '' : sum);
+                    }
+                    else {
+                        $('<td>', {
+                            align: 'center'
+                        }).appendTo(tr).text(item.rounds[j++]);
+                    }
+                });
                 $('<td>', {
-                    class: 'table-item-sum',
                     align: 'center'
                 }).appendTo(tr).text(item.sum);
             });
