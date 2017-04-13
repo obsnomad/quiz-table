@@ -1,4 +1,6 @@
 var config = {
+    styles: {
+    },
     rules: [
         {
             name: 'Мелотрек',

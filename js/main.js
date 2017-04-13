@@ -161,6 +161,7 @@ function addCellWithInput(tr, data, i, j, item) {
         saveTableToStorage(data);
         var canvas = document.getElementById('canvas');
         canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+        $(canvas).hide();
     }).val(item.rounds && item.rounds[j] ? item.rounds[j] : ''));
 }
 
@@ -206,6 +207,7 @@ function fillTableFromStorage() {
     }
     var canvas = document.getElementById('canvas');
     canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+    $(canvas).hide();
 }
 
 function compareTableItems(a, b) {
@@ -242,7 +244,22 @@ function changeRule() {
 
 function getRule() {
     var data = localStorage.getItem('rule');
-    return data ? JSON.parse(data) : {};
+    data = data ? JSON.parse(data) : {};
+    if(data && data.rounds) {
+        data.roundsCount = 0;
+        data.rounds.forEach(function (round) {
+            if(typeof round === 'object') {
+                round.subrounds.forEach(function() {
+                    data.roundsCount++;
+                });
+                data.roundsCount++;
+            }
+            else {
+                data.roundsCount++;
+            }
+        });
+    }
+    return data;
 }
 
 bootbox.setDefaults({
@@ -287,11 +304,28 @@ $(function () {
     $('#generate-image').click(function () {
         var data = getTable();
         if (data.length > 0) {
-            var width = 40;
-            var padding = 10;
+            var generalStyle = $.extend({}, {
+                imageWidth: 1280,
+                imageHeight: 1024,
+                columnWidth: 40,
+                padding: 10,
+                fontSize: 22
+            }, config && config.styles ? config.styles : {});
+            var rule = getRule();
+            var styles = rule && rule.styles ? rule.styles : {};
+            var style = $.extend({}, {
+                fontFamily: 'sans-serif',
+                background: '#fff',
+                color: '#000',
+                headerColor: '#4b4b4b',
+                border: '0',
+                tHeaderColor: null
+            }, styles);
+            if(!style.tHeaderColor) {
+                style.tHeaderColor = style.color;
+            }
             var curRound = 0;
             var curRoundSum = 0;
-            var rule = getRule();
             // Определить текущий раунд (отсчёт от 1)
             data.forEach(function (item) {
                 if (item.rounds) {
@@ -381,33 +415,35 @@ $(function () {
             var canvas = document.getElementById('canvas');
             var ctx = canvas.getContext('2d');
             var tr = $('<tr>').appendTo(table);
+            canvas.width = generalStyle.imageWidth;
+            canvas.height = generalStyle.imageHeight;
             $('<th>', {
                 align: 'center',
-                width: width
+                width: generalStyle.columnWidth
             }).appendTo(tr).text('Место');
             $('<th>', {
                 align: 'left',
-                width: canvas.width - padding - width * (2 + rule.rounds.length)
+                width: canvas.width - generalStyle.padding - generalStyle.columnWidth * (2 + rule.roundsCount)
             }).appendTo(tr).text('Команда');
             rule.rounds.forEach(function (round) {
                 if(typeof round === 'object') {
                     round.subrounds.forEach(function(subround) {
                         $('<th>', {
-                            width: width
+                            width: generalStyle.columnWidth
                         }).appendTo(tr).html(subround);
                     });
                     $('<th>', {
-                        width: width
+                        width: generalStyle.columnWidth
                     }).appendTo(tr).html(round.name);
                 }
                 else {
                     $('<th>', {
-                        width: width
+                        width: generalStyle.columnWidth
                     }).appendTo(tr).html(round);
                 }
             });
             $('<th>', {
-                width: width
+                width: generalStyle.columnWidth
             }).appendTo(tr).text('Сумма');
             var place = 0;
             var placeGroup = 1;
@@ -461,19 +497,10 @@ $(function () {
                     align: 'center'
                 }).appendTo(tr).text(item.sum);
             });
-            var styles = rule && rule.styles ? rule.styles : false;
-            var style = {
-                fontFamily: styles && styles.fontFamily ? styles.fontFamily : 'sans-serif',
-                background: styles && styles.background ? styles.background : '#fff',
-                color: styles && styles.color ? styles.color : '#000',
-                headerColor: styles && styles.headerColor ? styles.headerColor : '#4b4b4b',
-                border: styles && styles.border ? styles.border : '0'
-            };
-            style.tHeaderColor = styles && styles.tHeaderColor ? styles.tHeaderColor : style.color;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             var cdata = '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">\
                 <foreignObject width="100%" height="100%" style="background: ' + style.background + '; color: ' + style.color + ';">\
-                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-size: 22px; font-family: ' + style.fontFamily + '; padding: ' + padding + 'px;">\
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-size: ' + generalStyle.fontSize + 'px; font-family: ' + style.fontFamily + '; padding: ' + generalStyle.padding + 'px;">\
                         <style>\
                             th, td {\
                                 padding: 4px 8px;\
@@ -502,6 +529,7 @@ $(function () {
                 DOMURL.revokeObjectURL(url);
             };
             img.src = url;
+            $(canvas).show();
         }
     });
 });

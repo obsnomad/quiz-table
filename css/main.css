@@ -119,6 +119,7 @@ li:hover .team-btn {
 }
 
 #canvas {
+    display: none;
     max-width: 100%;
     height: auto;
     margin: 15px 0 0;
