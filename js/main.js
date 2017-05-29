@@ -391,7 +391,6 @@ $(function () {
                 data[i].checksum = checksum + sum;
                 data[i].rounds.splice(curRound);
             });
-            console.log(nonZero);
             // Отсортировать по очкам
             data.sort(function (a, b) {
                 if (a.sum < b.sum) {
