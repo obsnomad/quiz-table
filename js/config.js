@@ -1,5 +1,10 @@
 var config = {
     styles: {
+        imageWidth: 1280,
+        imageHeight: 1024,
+        columnWidth: 60,
+        padding: 15,
+        fontSize: 32
     },
     rules: [
         {
@@ -14,7 +19,7 @@ var config = {
                 7
             ],
             styles: {
-                fontFamily: 'sans-serif',
+                fontFamily: 'Oranienbaum, serif',
                 background: '#272727',
                 color: '#fff',
                 tHeaderColor: '#d3b458',
@@ -34,12 +39,12 @@ var config = {
                 7
             ],
             styles: {
-                fontFamily: 'sans-serif',
+                fontFamily: 'Oranienbaum, serif',
                 background: '#0f234f',
                 color: '#fff',
                 tHeaderColor: '#d3b458',
                 headerColor: '#c6c6c6',
-                border: '1px solid #000'
+                border: '1px solid #2454be'
             }
         },
         {
@@ -63,7 +68,7 @@ var config = {
                 }
             ],
             styles: {
-                fontFamily: 'serif',
+                fontFamily: 'Oranienbaum, serif',
                 background: '#000',
                 color: '#fff',
                 headerColor: '#c6c6c6',

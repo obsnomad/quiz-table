@@ -49,7 +49,7 @@ function fillListFromStorage() {
                 var parent = $(this).parents('li').first();
                 var text = parent.data('text');
                 var table = $('#table-list');
-                if ($('tr[data-text="' + text + '"]').length === 0) {
+                if ($('tr[data-text="' + text.replace(/"/g, '\\"') + '"]').length === 0) {
                     addTableToStorage([{
                         name: text
                     }]);
@@ -171,8 +171,8 @@ function fillTableFromStorage() {
     $('<th>').appendTo(tr).text('Команда');
     var rule = getRule();
     rule.rounds.forEach(function (round) {
-        if(typeof round === 'object') {
-            round.subrounds.forEach(function(subround) {
+        if (typeof round === 'object') {
+            round.subrounds.forEach(function (subround) {
                 $('<th>').appendTo(tr).text(subround);
             })
         }
@@ -190,8 +190,8 @@ function fillTableFromStorage() {
             $('<td>').appendTo(tr).text(item.name);
             var j = 0;
             rule.rounds.forEach(function (round) {
-                if(typeof round === 'object') {
-                    round.subrounds.forEach(function() {
+                if (typeof round === 'object') {
+                    round.subrounds.forEach(function () {
                         addCellWithInput(tr, data, i, j++, item);
                     });
                 }
@@ -245,11 +245,11 @@ function changeRule() {
 function getRule() {
     var data = localStorage.getItem('rule');
     data = data ? JSON.parse(data) : {};
-    if(data && data.rounds) {
+    if (data && data.rounds) {
         data.roundsCount = 0;
         data.rounds.forEach(function (round) {
-            if(typeof round === 'object') {
-                round.subrounds.forEach(function() {
+            if (typeof round === 'object') {
+                round.subrounds.forEach(function () {
                     data.roundsCount++;
                 });
                 data.roundsCount++;
@@ -321,7 +321,7 @@ $(function () {
                 border: '0',
                 tHeaderColor: null
             }, styles);
-            if(!style.tHeaderColor) {
+            if (!style.tHeaderColor) {
                 style.tHeaderColor = style.color;
             }
             var curRound = 0;
@@ -337,6 +337,7 @@ $(function () {
                 }
             });
             // Просчитать итог по текущему раунду и заполнить пропущенные значения нолями
+            var nonZero = {};
             data.forEach(function (item, i) {
                 var sum = 0;
                 var checksum = '';
@@ -344,15 +345,18 @@ $(function () {
                     data[i].rounds = [];
                 }
                 var j = 0;
-                rule.rounds.forEach(function(round, k) {
-                    if(j < curRound) {
+                rule.rounds.forEach(function (round, k) {
+                    if (j < curRound) {
                         curRoundSum = Math.max(curRoundSum, k);
-                        if(typeof round === 'object') {
+                        if (typeof round === 'object') {
                             var roundsSum = 0;
-                            round.subrounds.forEach(function() {
+                            round.subrounds.forEach(function () {
                                 var val = item.rounds && item.rounds[j] ? parseFloat(item.rounds[j]) : 0;
                                 val = isNaN(val) ? 0 : val;
                                 data[i].rounds[j] = val;
+                                if(val > 0) {
+                                    nonZero[j] = true;
+                                }
                                 roundsSum += val;
                                 j++;
                             });
@@ -370,9 +374,12 @@ $(function () {
                             if (!data[i].roundsSum) {
                                 data[i].roundsSum = [];
                             }
+                            if(val > 0) {
+                                nonZero[j] = true;
+                            }
                             data[i].rounds[j] = val;
                             data[i].roundsSum[j] = val;
-                            checksum += val;
+                            checksum += val * 10;
                             j++;
                         }
                     }
@@ -384,8 +391,8 @@ $(function () {
                 data[i].checksum = checksum + sum;
                 data[i].rounds.splice(curRound);
             });
+            console.log(nonZero);
             // Отсортировать по очкам
-            var placeGroups = {};
             data.sort(function (a, b) {
                 if (a.sum < b.sum) {
                     return 1;
@@ -403,12 +410,19 @@ $(function () {
                         return -1;
                     }
                 }
-                if (!placeGroups[a.checksum]) {
-                    placeGroups[a.checksum] = 0;
-                }
-                placeGroups[a.checksum]++;
                 return compareTableItems(a, b);
             });
+            // Группировать по месту в рейтинге
+            var placeGroups = [];
+            data.forEach(function (item, i) {
+                if (!placeGroups[item.checksum]) {
+                    placeGroups[item.checksum] = 0;
+                }
+                placeGroups[item.checksum]++;
+            });
+            for(var i in placeGroups) {
+                placeGroups[i]--;
+            }
             var table = $('<table>', {
                 width: '100%'
             });
@@ -426,8 +440,8 @@ $(function () {
                 width: canvas.width - generalStyle.padding - generalStyle.columnWidth * (2 + rule.roundsCount)
             }).appendTo(tr).text('Команда');
             rule.rounds.forEach(function (round) {
-                if(typeof round === 'object') {
-                    round.subrounds.forEach(function(subround) {
+                if (typeof round === 'object') {
+                    round.subrounds.forEach(function (subround) {
                         $('<th>', {
                             width: generalStyle.columnWidth
                         }).appendTo(tr).html(subround);
@@ -453,11 +467,11 @@ $(function () {
                     'data-text': item.name
                 }).appendTo(table).data('text', item.name);
                 var itemPlace = '';
-                if(curChecksum !== item.checksum) {
+                if (curChecksum !== item.checksum) {
                     place += placeGroup;
                 }
                 curChecksum = item.checksum;
-                if(placeGroups[item.checksum] && placeGroups[item.checksum] > 0) {
+                if (placeGroups[item.checksum] && placeGroups[item.checksum] > 0) {
                     placeGroup = placeGroups[item.checksum];
                     itemPlace = place + '-' + (place + placeGroup);
                     placeGroup++;
@@ -474,10 +488,11 @@ $(function () {
                 }).appendTo(tr).text(item.name);
                 var j = 0;
                 rule.rounds.forEach(function (round) {
-                    if(typeof round === 'object') {
+                    if (typeof round === 'object') {
                         var sum = 0;
-                        round.subrounds.forEach(function() {
-                            var value = item.rounds[j++];
+                        round.subrounds.forEach(function () {
+                            var value = nonZero[j] ? item.rounds[j] : '';
+                            j++;
                             sum += parseFloat(value);
                             $('<td>', {
                                 align: 'center'
@@ -488,9 +503,11 @@ $(function () {
                         }).appendTo(tr).text(isNaN(sum) ? '' : sum);
                     }
                     else {
+                        var value = nonZero[j] ? item.rounds[j] : '';
                         $('<td>', {
                             align: 'center'
-                        }).appendTo(tr).text(item.rounds[j++]);
+                        }).appendTo(tr).text(value);
+                        j++;
                     }
                 });
                 $('<td>', {
@@ -498,22 +515,32 @@ $(function () {
                 }).appendTo(tr).text(item.sum);
             });
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            var cdata = '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">\
+            var cdata = '<svg xmlns="http://www.w3.org/2000/svg" width="' + canvas.width + '" height="' + canvas.height + '">\
                 <foreignObject width="100%" height="100%" style="background: ' + style.background + '; color: ' + style.color + ';">\
-                    <div xmlns="http://www.w3.org/1999/xhtml" style="font-size: ' + generalStyle.fontSize + 'px; font-family: ' + style.fontFamily + '; padding: ' + generalStyle.padding + 'px;">\
-                        <style>\
-                            th, td {\
-                                padding: 4px 8px;\
-                                vertical-align: top;\
-                            }\
-                            table, th, td {\
-                                border: ' + style.border + ';\
-                            }\
-                            th {\
-                                color: ' + style.tHeaderColor + '\
-                            }\
-                        </style>\
-                        <div style="padding: 0 8px; margin-bottom: 10px; color: ' + style.headerColor + ';">' + $('#game-name').val() + '</div>\
+                    <style>\
+                        .overlay {\
+                            font-size: ' + generalStyle.fontSize + 'px;\
+                            font-family: ' + style.fontFamily + ';\
+                            padding: ' + generalStyle.padding + 'px;\
+                        }\
+                        .overlay > div {\
+                            padding: 0 8px;\
+                            margin-bottom: 10px;\
+                            color: ' + style.headerColor + ';\
+                        }\
+                        th, td {\
+                            padding: 4px 8px;\
+                            vertical-align: top;\
+                        }\
+                        table, th, td {\
+                            border: ' + style.border + ';\
+                        }\
+                        th {\
+                            color: ' + style.tHeaderColor + '\
+                        }\
+                    </style>\
+                    <div xmlns="http://www.w3.org/1999/xhtml" class="overlay">\
+                        <div>' + $('#game-name').val() + '</div>\
                         ' + table.html() + '\
                     </div>\
                 </foreignObject>\
