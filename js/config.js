@@ -1,10 +1,10 @@
 var config = {
     styles: {
-        imageWidth: 1280,
-        imageHeight: 1024,
+        imageWidth: 1200,
+        imageHeight: 900,
         columnWidth: 60,
-        padding: 15,
-        fontSize: 32
+        padding: 8,
+        fontSize: 24
     },
     rules: [
         {

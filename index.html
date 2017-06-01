@@ -16,6 +16,12 @@
     <label class="btn btn-primary btn-block btn-file">
         Загрузить список команд <input type="file" style="display: none;" id="btn-teams-list">
     </label>
+    <label class="btn btn-primary btn-block btn-file">
+        Загрузить полные данные <input type="file" style="display: none;" id="btn-import-data">
+    </label>
+    <button class="btn btn-primary btn-block" id="btn-export-data">
+        Сохранить полные данные
+    </button>
     <h4>Архив команд</h4>
     <ul id="teams-list"></ul>
     <div class="input-group" style="margin: 15px 0;">
@@ -42,7 +48,9 @@
     </div>
     <table id="table-list"></table>
     <div style="margin: 15px 0 0;">
-        <button class="btn btn-primary" id="generate-image">Создать изображение</button>
+        <button class="btn btn-success" id="generate-image">Создать изображение</button>
+        <button class="btn btn-primary" id="generate-csv">Сохранить CSV</button>
+        <button class="btn btn-warning" id="empty-table">Очистить таблицу</button>
     </div>
     <canvas id="canvas" width="1280" height="1024"></canvas>
 </div>

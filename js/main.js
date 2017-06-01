@@ -262,6 +262,165 @@ function getRule() {
     return data;
 }
 
+function getExportData() {
+    var data = getTable();
+    var dataExport = [];
+    if (data.length > 0) {
+        var rule = getRule();
+        var curRound = 0;
+        var curRoundSum = 0;
+        // Определить текущий раунд (отсчёт от 1)
+        data.forEach(function (item) {
+            if (item.rounds) {
+                item.rounds.forEach(function (round, j) {
+                    if (!isNaN(parseFloat(round))) {
+                        curRound = Math.max(curRound, j + 1);
+                    }
+                });
+            }
+        });
+        // Просчитать итог по текущему раунду и заполнить пропущенные значения нолями
+        var nonZero = {};
+        data.forEach(function (item, i) {
+            var sum = 0;
+            var checksum = '';
+            if (!data[i].rounds) {
+                data[i].rounds = [];
+            }
+            var j = 0;
+            rule.rounds.forEach(function (round, k) {
+                if (j < curRound) {
+                    curRoundSum = Math.max(curRoundSum, k);
+                    if (typeof round === 'object') {
+                        var roundsSum = 0;
+                        round.subrounds.forEach(function () {
+                            var val = item.rounds && item.rounds[j] ? parseFloat(item.rounds[j]) : 0;
+                            val = isNaN(val) ? 0 : val;
+                            data[i].rounds[j] = val;
+                            if(val > 0) {
+                                nonZero[j] = true;
+                            }
+                            roundsSum += val;
+                            j++;
+                        });
+                        sum += roundsSum;
+                        if (!data[i].roundsSum) {
+                            data[i].roundsSum = [];
+                        }
+                        data[i].roundsSum[j] = roundsSum;
+                        checksum += roundsSum;
+                    }
+                    else {
+                        var val = item.rounds && item.rounds[j] ? parseFloat(item.rounds[j]) : 0;
+                        val = isNaN(val) ? 0 : val;
+                        sum += val;
+                        if (!data[i].roundsSum) {
+                            data[i].roundsSum = [];
+                        }
+                        if(val > 0) {
+                            nonZero[j] = true;
+                        }
+                        data[i].rounds[j] = val;
+                        data[i].roundsSum[j] = val;
+                        checksum += val * 10;
+                        j++;
+                    }
+                }
+                else {
+                    return false;
+                }
+            });
+            data[i].sum = sum;
+            data[i].checksum = checksum + sum;
+            data[i].rounds.splice(curRound);
+        });
+        // Отсортировать по очкам
+        data.sort(function (a, b) {
+            if (a.sum < b.sum) {
+                return 1;
+            }
+            if (a.sum > b.sum) {
+                return -1;
+            }
+            for (var i = curRoundSum; i > 0; i--) {
+                var roundsSumA = a.roundsSum[i] ? a.roundsSum[i] : 0;
+                var roundsSumB = b.roundsSum[i] ? b.roundsSum[i] : 0;
+                if (roundsSumA < roundsSumB) {
+                    return 1;
+                }
+                if (roundsSumA > roundsSumB) {
+                    return -1;
+                }
+            }
+            return compareTableItems(a, b);
+        });
+        // Группировать по месту в рейтинге
+        var placeGroups = [];
+        data.forEach(function (item, i) {
+            if (!placeGroups[item.checksum]) {
+                placeGroups[item.checksum] = 0;
+            }
+            placeGroups[item.checksum]++;
+        });
+        for(var i in placeGroups) {
+            placeGroups[i]--;
+        }
+        var place = 0;
+        var placeGroup = 1;
+        var curChecksum = '';
+        data.forEach(function (item, i) {
+            var itemExport = [];
+            var itemPlace = '';
+            if (curChecksum !== item.checksum) {
+                place += placeGroup;
+            }
+            curChecksum = item.checksum;
+            if (placeGroups[item.checksum] && placeGroups[item.checksum] > 0) {
+                placeGroup = placeGroups[item.checksum];
+                itemPlace = place + '-' + (place + placeGroup);
+                placeGroup++;
+            }
+            else {
+                placeGroup = 1;
+                itemPlace = place;
+            }
+            itemExport.push(itemPlace);
+            itemExport.push(item.name);
+            var j = 0;
+            rule.rounds.forEach(function (round) {
+                if (typeof round === 'object') {
+                    var sum = 0;
+                    round.subrounds.forEach(function () {
+                        var value = nonZero[j] ? item.rounds[j] : '';
+                        j++;
+                        sum += parseFloat(value);
+                        itemExport.push(value);
+                    });
+                    itemExport.push(isNaN(sum) ? '' : sum);
+                }
+                else {
+                    var value = nonZero[j] ? item.rounds[j] : '';
+                    itemExport.push(value);
+                    j++;
+                }
+            });
+            itemExport.push(item.sum);
+            dataExport.push(itemExport);
+        });
+    }
+    return dataExport;
+}
+
+function download(file, text) {
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', file);
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+}
+
 bootbox.setDefaults({
     locale: 'ru'
 });
@@ -278,6 +437,29 @@ $(function () {
             };
             reader.readAsText(file);
         }
+    });
+    $('#btn-import-data').change(function () {
+        var file = this.files ? this.files[0] : null;
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function () {
+                var data = JSON.parse(reader.result.trim());
+                localStorage.setItem('teams-list', JSON.stringify(data['teams-list']));
+                localStorage.setItem('table-list', JSON.stringify(data['table-list']));
+                localStorage.setItem('rule', JSON.stringify(data['rule']));
+                localStorage.setItem('game-name', data['game-name']);
+                location.reload();
+            };
+            reader.readAsText(file);
+        }
+    });
+    $('#btn-export-data').click(function () {
+        download('data.json', JSON.stringify({
+            'teams-list': JSON.parse(localStorage.getItem('teams-list')),
+            'table-list': JSON.parse(localStorage.getItem('table-list')),
+            'rule': JSON.parse(localStorage.getItem('rule')),
+            'game-name': localStorage.getItem('game-name')
+        }));
     });
     $('#btn-team-add').click(function () {
         addListItem();
@@ -302,7 +484,7 @@ $(function () {
         localStorage.setItem('game-name', $(this).val().trim());
     });
     $('#generate-image').click(function () {
-        var data = getTable();
+        var data = getExportData();
         if (data.length > 0) {
             var generalStyle = $.extend({}, {
                 imageWidth: 1280,
@@ -323,104 +505,6 @@ $(function () {
             }, styles);
             if (!style.tHeaderColor) {
                 style.tHeaderColor = style.color;
-            }
-            var curRound = 0;
-            var curRoundSum = 0;
-            // Определить текущий раунд (отсчёт от 1)
-            data.forEach(function (item) {
-                if (item.rounds) {
-                    item.rounds.forEach(function (round, j) {
-                        if (!isNaN(parseFloat(round))) {
-                            curRound = Math.max(curRound, j + 1);
-                        }
-                    });
-                }
-            });
-            // Просчитать итог по текущему раунду и заполнить пропущенные значения нолями
-            var nonZero = {};
-            data.forEach(function (item, i) {
-                var sum = 0;
-                var checksum = '';
-                if (!data[i].rounds) {
-                    data[i].rounds = [];
-                }
-                var j = 0;
-                rule.rounds.forEach(function (round, k) {
-                    if (j < curRound) {
-                        curRoundSum = Math.max(curRoundSum, k);
-                        if (typeof round === 'object') {
-                            var roundsSum = 0;
-                            round.subrounds.forEach(function () {
-                                var val = item.rounds && item.rounds[j] ? parseFloat(item.rounds[j]) : 0;
-                                val = isNaN(val) ? 0 : val;
-                                data[i].rounds[j] = val;
-                                if(val > 0) {
-                                    nonZero[j] = true;
-                                }
-                                roundsSum += val;
-                                j++;
-                            });
-                            sum += roundsSum;
-                            if (!data[i].roundsSum) {
-                                data[i].roundsSum = [];
-                            }
-                            data[i].roundsSum[j] = roundsSum;
-                            checksum += roundsSum;
-                        }
-                        else {
-                            var val = item.rounds && item.rounds[j] ? parseFloat(item.rounds[j]) : 0;
-                            val = isNaN(val) ? 0 : val;
-                            sum += val;
-                            if (!data[i].roundsSum) {
-                                data[i].roundsSum = [];
-                            }
-                            if(val > 0) {
-                                nonZero[j] = true;
-                            }
-                            data[i].rounds[j] = val;
-                            data[i].roundsSum[j] = val;
-                            checksum += val * 10;
-                            j++;
-                        }
-                    }
-                    else {
-                        return false;
-                    }
-                });
-                data[i].sum = sum;
-                data[i].checksum = checksum + sum;
-                data[i].rounds.splice(curRound);
-            });
-            // Отсортировать по очкам
-            data.sort(function (a, b) {
-                if (a.sum < b.sum) {
-                    return 1;
-                }
-                if (a.sum > b.sum) {
-                    return -1;
-                }
-                for (var i = curRoundSum; i > 0; i--) {
-                    var roundsSumA = a.roundsSum[i] ? a.roundsSum[i] : 0;
-                    var roundsSumB = b.roundsSum[i] ? b.roundsSum[i] : 0;
-                    if (roundsSumA < roundsSumB) {
-                        return 1;
-                    }
-                    if (roundsSumA > roundsSumB) {
-                        return -1;
-                    }
-                }
-                return compareTableItems(a, b);
-            });
-            // Группировать по месту в рейтинге
-            var placeGroups = [];
-            data.forEach(function (item, i) {
-                if (!placeGroups[item.checksum]) {
-                    placeGroups[item.checksum] = 0;
-                }
-                placeGroups[item.checksum]++;
-            });
-            for(var i in placeGroups) {
-                placeGroups[i]--;
             }
             var table = $('<table>', {
                 width: '100%'
@@ -458,60 +542,23 @@ $(function () {
             $('<th>', {
                 width: generalStyle.columnWidth
             }).appendTo(tr).text('Сумма');
-            var place = 0;
-            var placeGroup = 1;
-            var curChecksum = '';
-            data.forEach(function (item, i) {
+            data.forEach(function (item) {
+                var place = item.splice(0, 1);
+                var name = item.splice(0, 1);
                 var tr = $('<tr>', {
-                    'data-text': item.name
-                }).appendTo(table).data('text', item.name);
-                var itemPlace = '';
-                if (curChecksum !== item.checksum) {
-                    place += placeGroup;
-                }
-                curChecksum = item.checksum;
-                if (placeGroups[item.checksum] && placeGroups[item.checksum] > 0) {
-                    placeGroup = placeGroups[item.checksum];
-                    itemPlace = place + '-' + (place + placeGroup);
-                    placeGroup++;
-                }
-                else {
-                    placeGroup = 1;
-                    itemPlace = place;
-                }
+                    'data-text': name
+                }).appendTo(table).data('text', name);
                 $('<td>', {
                     align: 'center'
-                }).appendTo(tr).text(itemPlace);
+                }).appendTo(tr).text(place);
                 $('<td>', {
                     align: 'left'
-                }).appendTo(tr).text(item.name);
-                var j = 0;
-                rule.rounds.forEach(function (round) {
-                    if (typeof round === 'object') {
-                        var sum = 0;
-                        round.subrounds.forEach(function () {
-                            var value = nonZero[j] ? item.rounds[j] : '';
-                            j++;
-                            sum += parseFloat(value);
-                            $('<td>', {
-                                align: 'center'
-                            }).appendTo(tr).text(value);
-                        });
-                        $('<td>', {
-                            align: 'center'
-                        }).appendTo(tr).text(isNaN(sum) ? '' : sum);
-                    }
-                    else {
-                        var value = nonZero[j] ? item.rounds[j] : '';
-                        $('<td>', {
-                            align: 'center'
-                        }).appendTo(tr).text(value);
-                        j++;
-                    }
+                }).appendTo(tr).text(name);
+                item.forEach(function(field) {
+                    $('<td>', {
+                        align: 'center'
+                    }).appendTo(tr).text(field);
                 });
-                $('<td>', {
-                    align: 'center'
-                }).appendTo(tr).text(item.sum);
             });
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             var cdata = '<svg xmlns="http://www.w3.org/2000/svg" width="' + canvas.width + '" height="' + canvas.height + '">\
@@ -557,5 +604,40 @@ $(function () {
             img.src = url;
             $(canvas).show();
         }
+    });
+    $('#generate-csv').click(function () {
+        var data = getExportData();
+        if (data.length > 0) {
+            var dataExport = [
+                ['Место', 'Команда']
+            ];
+            var rule = getRule();
+            rule.rounds.forEach(function (round) {
+                if (typeof round === 'object') {
+                    round.subrounds.forEach(function (subround) {
+                        dataExport[0].push(subround);
+                    });
+                    dataExport[0].push(round.name);
+                }
+                else {
+                    dataExport[0].push(round);
+                }
+            });
+            dataExport[0].push('Сумма');
+            dataExport[0] = dataExport[0].join(';');
+            data.forEach(function (item) {
+                dataExport.push(item.join(';'));
+            });
+            download('data.csv', dataExport.join('\n'));
+        }
+    });
+    $('#empty-table').click(function () {
+        bootbox.confirm('Вы действительно хотите очистить таблицу результатов?', function (e) {
+            if (e) {
+                localStorage.setItem('table-list', '');
+                location.reload();
+            }
+        });
+
     });
 });
