@@ -1,10 +1,10 @@
 var config = {
     styles: {
-        imageWidth: 1200,
-        imageHeight: 900,
-        columnWidth: 60,
+        imageWidth: 1920,
+        imageHeight: 1080,
+        columnWidth: 120,
         padding: 8,
-        fontSize: 24
+        fontSize: 56
     },
     rules: [
         {
@@ -20,11 +20,11 @@ var config = {
             ],
             styles: {
                 fontFamily: 'Oranienbaum, serif',
-                background: '#272727',
+                background: '#302212',
                 color: '#fff',
                 tHeaderColor: '#d3b458',
-                headerColor: '#c6c6c6',
-                border: '1px solid #000'
+                headerColor: '#c6b27c',
+                border: '1px solid #100b06'
             }
         },
         {
@@ -67,8 +67,9 @@ var config = {
                     ]
                 }
             ],
+            pointsPriority: true,
             styles: {
-                fontFamily: 'Oranienbaum, serif',
+                fontFamily: 'Myriad Pro, sans-serif',
                 background: '#000',
                 color: '#fff',
                 headerColor: '#c6c6c6',

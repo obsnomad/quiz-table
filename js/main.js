@@ -308,7 +308,9 @@ function getExportData() {
                             data[i].roundsSum = [];
                         }
                         data[i].roundsSum[j] = roundsSum;
-                        checksum += roundsSum;
+                        if(rule.pointsPriority) {
+                            checksum += roundsSum;
+                        }
                     }
                     else {
                         var val = item.rounds && item.rounds[j] ? parseFloat(item.rounds[j]) : 0;
@@ -322,7 +324,9 @@ function getExportData() {
                         }
                         data[i].rounds[j] = val;
                         data[i].roundsSum[j] = val;
-                        checksum += val * 10;
+                        if(rule.pointsPriority) {
+                            checksum += val * 10;
+                        }
                         j++;
                     }
                 }
@@ -342,14 +346,16 @@ function getExportData() {
             if (a.sum > b.sum) {
                 return -1;
             }
-            for (var i = curRoundSum; i > 0; i--) {
-                var roundsSumA = a.roundsSum[i] ? a.roundsSum[i] : 0;
-                var roundsSumB = b.roundsSum[i] ? b.roundsSum[i] : 0;
-                if (roundsSumA < roundsSumB) {
-                    return 1;
-                }
-                if (roundsSumA > roundsSumB) {
-                    return -1;
+            if(rule.pointsPriority) {
+                for (var i = curRoundSum; i > 0; i--) {
+                    var roundsSumA = a.roundsSum[i] ? a.roundsSum[i] : 0;
+                    var roundsSumB = b.roundsSum[i] ? b.roundsSum[i] : 0;
+                    if (roundsSumA < roundsSumB) {
+                        return 1;
+                    }
+                    if (roundsSumA > roundsSumB) {
+                        return -1;
+                    }
                 }
             }
             return compareTableItems(a, b);
