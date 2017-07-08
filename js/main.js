@@ -512,6 +512,7 @@ $(function () {
             if (!style.tHeaderColor) {
                 style.tHeaderColor = style.color;
             }
+            var roundStyles = [];
             var table = $('<table>', {
                 width: '100%'
             });
@@ -530,19 +531,38 @@ $(function () {
             }).appendTo(tr).text('Команда');
             rule.rounds.forEach(function (round) {
                 if (typeof round === 'object') {
+                    var roundStyle = $.extend({}, {
+                        background: style.background,
+                        color: style.color,
+                        tHeaderColor: style.tHeaderColor,
+                        columnWidth: generalStyle.columnWidth
+                    }, round.styles ? round.styles : {});
                     round.subrounds.forEach(function (subround) {
-                        $('<th>', {
-                            width: generalStyle.columnWidth
+                        $('<th>').css({
+                            background: roundStyle.subroundsBackground ? roundStyle.subroundsBackground : roundStyle.background,
+                            color: roundStyle.subroundsTHeaderColor ? roundStyle.subroundsTHeaderColor : roundStyle.tHeaderColor,
+                            width: roundStyle.columnWidth
                         }).appendTo(tr).html(subround);
+                        roundStyles.push({
+                            background: roundStyle.subroundsBackground ? roundStyle.subroundsBackground : roundStyle.background,
+                            color: roundStyle.subroundsColor ? roundStyle.subroundsColor : roundStyle.color
+                        });
                     });
-                    $('<th>', {
-                        width: generalStyle.columnWidth
+                    $('<th>').css({
+                        background: roundStyle.background,
+                        color: roundStyle.tHeaderColor,
+                        width: roundStyle.columnWidth
                     }).appendTo(tr).html(round.name);
+                    roundStyles.push({
+                        background: roundStyle.background,
+                        color: roundStyle.color
+                    });
                 }
                 else {
                     $('<th>', {
                         width: generalStyle.columnWidth
                     }).appendTo(tr).html(round);
+                    roundStyles.push(null);
                 }
             });
             $('<th>', {
@@ -560,10 +580,10 @@ $(function () {
                 $('<td>', {
                     align: 'left'
                 }).appendTo(tr).text(name);
-                item.forEach(function(field) {
+                item.forEach(function(field, i) {
                     $('<td>', {
                         align: 'center'
-                    }).appendTo(tr).text(field);
+                    }).css(roundStyles[i] ? roundStyles[i] : {}).appendTo(tr).text(field);
                 });
             });
             ctx.clearRect(0, 0, canvas.width, canvas.height);

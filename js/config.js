@@ -2,9 +2,9 @@ var config = {
     styles: {
         imageWidth: 1920,
         imageHeight: 1080,
-        columnWidth: 120,
+        columnWidth: 80,
         padding: 8,
-        fontSize: 56
+        fontSize: 42
     },
     rules: [
         {
@@ -58,6 +58,10 @@ var config = {
                 6,
                 {
                     name: '&Sigma;A',
+                    styles: {
+                        background: '#373737',
+                        subroundsBackground: '#585858'
+                    },
                     subrounds: [
                         'A1',
                         'A2',
