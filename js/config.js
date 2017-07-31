@@ -2,9 +2,9 @@ var config = {
     styles: {
         imageWidth: 1920,
         imageHeight: 1080,
-        columnWidth: 80,
+        columnWidth: 100,
         padding: 8,
-        fontSize: 42
+        fontSize: 48
     },
     rules: [
         {
@@ -18,6 +18,7 @@ var config = {
                 6,
                 7
             ],
+            finalRounds: 2,
             styles: {
                 fontFamily: 'Oranienbaum, serif',
                 background: '#302212',
@@ -38,6 +39,7 @@ var config = {
                 6,
                 7
             ],
+            finalRounds: 2,
             styles: {
                 fontFamily: 'Oranienbaum, serif',
                 background: '#0f234f',
@@ -71,6 +73,7 @@ var config = {
                     ]
                 }
             ],
+            finalRounds: 1,
             pointsPriority: true,
             styles: {
                 fontFamily: 'Myriad Pro, sans-serif',

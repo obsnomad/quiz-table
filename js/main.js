@@ -262,7 +262,7 @@ function getRule() {
     return data;
 }
 
-function getExportData() {
+function getExportData(isFinal) {
     var data = getTable();
     var dataExport = [];
     if (data.length > 0) {
@@ -289,14 +289,15 @@ function getExportData() {
             }
             var j = 0;
             rule.rounds.forEach(function (round, k) {
+                var show = !isFinal || (isFinal && (rule.rounds.length - k <= (rule.finalRounds ? rule.finalRounds : 1)));
                 if (j < curRound) {
                     curRoundSum = Math.max(curRoundSum, k);
                     if (typeof round === 'object') {
                         var roundsSum = 0;
                         round.subrounds.forEach(function () {
-                            var val = item.rounds && item.rounds[j] ? parseFloat(item.rounds[j]) : 0;
+                            var val = show && item.rounds && item.rounds[j] ? parseFloat(item.rounds[j]) : 0;
                             val = isNaN(val) ? 0 : val;
-                            data[i].rounds[j] = val;
+                            data[i].rounds[j] = show ? val : '';
                             if(val > 0) {
                                 nonZero[j] = true;
                             }
@@ -313,7 +314,7 @@ function getExportData() {
                         }
                     }
                     else {
-                        var val = item.rounds && item.rounds[j] ? parseFloat(item.rounds[j]) : 0;
+                        var val = show && item.rounds && item.rounds[j] ? parseFloat(item.rounds[j]) : 0;
                         val = isNaN(val) ? 0 : val;
                         sum += val;
                         if (!data[i].roundsSum) {
@@ -322,7 +323,7 @@ function getExportData() {
                         if(val > 0) {
                             nonZero[j] = true;
                         }
-                        data[i].rounds[j] = val;
+                        data[i].rounds[j] = show ? val : '';
                         data[i].roundsSum[j] = val;
                         if(rule.pointsPriority) {
                             checksum += val * 10;
@@ -489,8 +490,9 @@ $(function () {
     $('#game-name').val(localStorage.getItem('game-name')).keyup(function () {
         localStorage.setItem('game-name', $(this).val().trim());
     });
-    $('#generate-image').click(function () {
-        var data = getExportData();
+    $('#generate-image, #generate-image-final').click(function () {
+        var isFinal = $(this).attr('id') === 'generate-image-final';
+        var data = getExportData(isFinal);
         if (data.length > 0) {
             var generalStyle = $.extend({}, {
                 imageWidth: 1280,
@@ -570,6 +572,7 @@ $(function () {
             }).appendTo(tr).text('Сумма');
             data.forEach(function (item) {
                 var place = item.splice(0, 1);
+                place = isFinal ? '' : place;
                 var name = item.splice(0, 1);
                 var tr = $('<tr>', {
                     'data-text': name
