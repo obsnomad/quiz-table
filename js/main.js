@@ -262,6 +262,7 @@ function getRule() {
     return data;
 }
 
+var maxRoundValues = [];
 function getExportData(isFinal) {
     var data = getTable();
     var dataExport = [];
@@ -269,12 +270,19 @@ function getExportData(isFinal) {
         var rule = getRule();
         var curRound = 0;
         var curRoundSum = 0;
-        // Определить текущий раунд (отсчёт от 1)
+        maxRoundValues = [];
+        // Определить текущий раунд (отсчёт от 1) и максимальный балл в каждом раунде, если требуется
         data.forEach(function (item) {
             if (item.rounds) {
                 item.rounds.forEach(function (round, j) {
                     if (!isNaN(parseFloat(round))) {
                         curRound = Math.max(curRound, j + 1);
+                        if(rule.roundsPriority) {
+                            if(!maxRoundValues[j]) {
+                                maxRoundValues[j] = 0;
+                            }
+                            maxRoundValues[j] = Math.max(maxRoundValues[j], round);
+                        }
                     }
                 });
             }
@@ -283,7 +291,7 @@ function getExportData(isFinal) {
         var nonZero = {};
         data.forEach(function (item, i) {
             var sum = 0;
-            var checksum = '';
+            var checksum = rule.roundsPriority ? 0 : '';
             if (!data[i].rounds) {
                 data[i].rounds = [];
             }
@@ -328,6 +336,9 @@ function getExportData(isFinal) {
                         if(rule.pointsPriority) {
                             checksum += val * 10;
                         }
+                        if(rule.roundsPriority && val === maxRoundValues[j]) {
+                            checksum += 1;
+                        }
                         j++;
                     }
                 }
@@ -336,7 +347,7 @@ function getExportData(isFinal) {
                 }
             });
             data[i].sum = sum;
-            data[i].checksum = checksum + sum;
+            data[i].checksum = checksum + (rule.roundsPriority ? 0 : sum);
             data[i].rounds.splice(curRound);
         });
         // Отсортировать по очкам
@@ -357,6 +368,14 @@ function getExportData(isFinal) {
                     if (roundsSumA > roundsSumB) {
                         return -1;
                     }
+                }
+            }
+            if(rule.roundsPriority) {
+                if (a.checksum < b.checksum) {
+                    return 1;
+                }
+                if (a.checksum > b.checksum) {
+                    return -1;
                 }
             }
             return compareTableItems(a, b);
@@ -499,7 +518,8 @@ $(function () {
                 imageHeight: 1024,
                 columnWidth: 40,
                 padding: 10,
-                fontSize: 22
+                fontSize: 22,
+                fontStretch: 'normal'
             }, config && config.styles ? config.styles : {});
             var rule = getRule();
             var styles = rule && rule.styles ? rule.styles : {};
@@ -509,10 +529,30 @@ $(function () {
                 color: '#000',
                 headerColor: '#4b4b4b',
                 border: '0',
-                tHeaderColor: null
+                tHeaderColor: null,
+                tHeaderBackground: null,
+                cellColor: null,
+                cellBackground: null,
+                oddCellColor: null,
+                oddCellBackground: null
             }, styles);
             if (!style.tHeaderColor) {
                 style.tHeaderColor = style.color;
+            }
+            if (!style.tHeaderBackground) {
+                style.tHeaderBackground = style.background;
+            }
+            if (!style.cellColor) {
+                style.cellColor = style.color;
+            }
+            if (!style.cellBackground) {
+                style.cellBackground = style.background;
+            }
+            if (!style.oddCellColor) {
+                style.oddCellColor = style.color;
+            }
+            if (!style.oddCellBackground) {
+                style.oddCellBackground = style.background;
             }
             var roundStyles = [];
             var table = $('<table>', {
@@ -584,9 +624,17 @@ $(function () {
                     align: 'left'
                 }).appendTo(tr).text(name);
                 item.forEach(function(field, i) {
+                    var styles = roundStyles[i] ? roundStyles[i] : {};
+                    if(rule.roundsPriority && maxRoundValues[i] === field) {
+                        styles.fontWeight = 'bold';
+                        styles.color = style.priorityColor ? style.priorityColor : style.color;
+                    }
                     $('<td>', {
                         align: 'center'
-                    }).css(roundStyles[i] ? roundStyles[i] : {}).appendTo(tr).text(field);
+                    })
+                        .css(styles)
+                        .appendTo(tr)
+                        .text(field);
                 });
             });
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -595,6 +643,7 @@ $(function () {
                     <style>\
                         .overlay {\
                             font-size: ' + generalStyle.fontSize + 'px;\
+                            font-stretch: ' + generalStyle.fontStretch + ';\
                             font-family: ' + style.fontFamily + ';\
                             padding: ' + generalStyle.padding + 'px;\
                         }\
@@ -606,12 +655,19 @@ $(function () {
                         th, td {\
                             padding: 4px 8px;\
                             vertical-align: top;\
+                            color: ' + style.cellColor + ';\
+                            background: ' + style.cellBackground + ';\
+                        }\
+                        tr:nth-child(odd) td {\
+                            color: ' + style.oddCellColor + ';\
+                            background: ' + style.oddCellBackground + ';\
                         }\
                         table, th, td {\
                             border: ' + style.border + ';\
                         }\
                         th {\
-                            color: ' + style.tHeaderColor + '\
+                            color: ' + style.tHeaderColor + ';\
+                            background: ' + style.tHeaderBackground + ';\
                         }\
                     </style>\
                     <div xmlns="http://www.w3.org/1999/xhtml" class="overlay">\

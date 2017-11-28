@@ -2,9 +2,10 @@ var config = {
     styles: {
         imageWidth: 1920,
         imageHeight: 1080,
-        columnWidth: 100,
+        columnWidth: 120,
         padding: 8,
-        fontSize: 48
+        //fontStretch: 'ultra-condensed',
+        fontSize: 46
     },
     rules: [
         {
@@ -80,6 +81,29 @@ var config = {
                 background: '#000',
                 color: '#fff',
                 headerColor: '#c6c6c6',
+                border: '1px solid #000'
+            }
+        },
+        {
+            name: 'Лига Индиго',
+            rounds: [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            roundsPriority: true,
+            styles: {
+                fontFamily: 'Arial, sans-serif',
+                background: '#ffffff',
+                cellBackground: '#cdc0da',
+                oddCellBackground: '#e6e0ec',
+                color: '#0e0100',
+                priorityColor: '#4b0081',
+                tHeaderColor: '#ffffff',
+                tHeaderBackground: '#4b0081',
+                headerColor: '#4b0081',
                 border: '1px solid #000'
             }
         }
