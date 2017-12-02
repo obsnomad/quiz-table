@@ -138,7 +138,7 @@ function addListItem() {
 function calcSum(parent) {
     var sum = 0;
     $('input', parent).each(function () {
-        var val = parseFloat($(this).val());
+        var val = parseFloat($(this).val().replace(',', '.'));
         if (!isNaN(val)) {
             sum += val;
         }
@@ -155,7 +155,7 @@ function addCellWithInput(tr, data, i, j, item) {
         if (!data[i].rounds) {
             data[i].rounds = [];
         }
-        var val = parseFloat($(this).val());
+        var val = parseFloat($(this).val().replace(',', '.'));
         val = isNaN(val) ? '' : val;
         data[i].rounds[j] = val;
         saveTableToStorage(data);
@@ -291,7 +291,8 @@ function getExportData(isFinal) {
         var nonZero = {};
         data.forEach(function (item, i) {
             var sum = 0;
-            var checksum = rule.roundsPriority ? 0 : '';
+            var checksum = '';
+            var checksumRounds = 0;
             if (!data[i].rounds) {
                 data[i].rounds = [];
             }
@@ -334,10 +335,10 @@ function getExportData(isFinal) {
                         data[i].rounds[j] = show ? val : '';
                         data[i].roundsSum[j] = val;
                         if(rule.pointsPriority) {
-                            checksum += val * 10;
+                            checksum = ('000' + val * 10).slice(-3) + checksum;
                         }
                         if(rule.roundsPriority && val === maxRoundValues[j]) {
-                            checksum += 1;
+                            checksumRounds++;
                         }
                         j++;
                     }
@@ -347,7 +348,7 @@ function getExportData(isFinal) {
                 }
             });
             data[i].sum = sum;
-            data[i].checksum = checksum + (rule.roundsPriority ? 0 : sum);
+            data[i].checksum = rule.roundsPriority ? sum * 10 + ('000' + checksumRounds).slice(-3) + checksum : checksum + sum;
             data[i].rounds.splice(curRound);
         });
         // Отсортировать по очкам
@@ -357,6 +358,14 @@ function getExportData(isFinal) {
             }
             if (a.sum > b.sum) {
                 return -1;
+            }
+            if(rule.roundsPriority) {
+                if (a.checksum < b.checksum) {
+                    return 1;
+                }
+                if (a.checksum > b.checksum) {
+                    return -1;
+                }
             }
             if(rule.pointsPriority) {
                 for (var i = curRoundSum; i > 0; i--) {
@@ -368,14 +377,6 @@ function getExportData(isFinal) {
                     if (roundsSumA > roundsSumB) {
                         return -1;
                     }
-                }
-            }
-            if(rule.roundsPriority) {
-                if (a.checksum < b.checksum) {
-                    return 1;
-                }
-                if (a.checksum > b.checksum) {
-                    return -1;
                 }
             }
             return compareTableItems(a, b);
@@ -634,7 +635,7 @@ $(function () {
                     })
                         .css(styles)
                         .appendTo(tr)
-                        .text(field);
+                        .text(('' + field).replace('.', ','));
                 });
             });
             ctx.clearRect(0, 0, canvas.width, canvas.height);

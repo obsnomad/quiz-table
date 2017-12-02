@@ -2,10 +2,10 @@ var config = {
     styles: {
         imageWidth: 1920,
         imageHeight: 1080,
-        columnWidth: 120,
+        columnWidth: 150,
         padding: 8,
         //fontStretch: 'ultra-condensed',
-        fontSize: 46
+        fontSize: 36
     },
     rules: [
         {
@@ -87,13 +87,14 @@ var config = {
         {
             name: 'Лига Индиго',
             rounds: [
-                1,
-                2,
-                3,
-                4,
-                5
+                'Раунд 1',
+                'Раунд 2',
+                'Раунд 3',
+                'Раунд 4',
+                'Раунд 5'
             ],
             roundsPriority: true,
+            pointsPriority: true,
             styles: {
                 fontFamily: 'Arial, sans-serif',
                 background: '#ffffff',
