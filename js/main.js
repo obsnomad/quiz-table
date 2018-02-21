@@ -307,7 +307,7 @@ function getExportData(isFinal) {
                             var val = show && item.rounds && item.rounds[j] ? parseFloat(item.rounds[j]) : 0;
                             val = isNaN(val) ? 0 : val;
                             data[i].rounds[j] = show ? val : '';
-                            if(val > 0) {
+                            if(val !== 0) {
                                 nonZero[j] = true;
                             }
                             roundsSum += val;
@@ -329,7 +329,7 @@ function getExportData(isFinal) {
                         if (!data[i].roundsSum) {
                             data[i].roundsSum = [];
                         }
-                        if(val > 0) {
+                        if(val !== 0) {
                             nonZero[j] = true;
                         }
                         data[i].rounds[j] = show ? val : '';
@@ -395,7 +395,7 @@ function getExportData(isFinal) {
         var place = 0;
         var placeGroup = 1;
         var curChecksum = '';
-        data.forEach(function (item, i) {
+         data.forEach(function (item, i) {
             var itemExport = [];
             var itemPlace = '';
             if (curChecksum !== item.checksum) {
