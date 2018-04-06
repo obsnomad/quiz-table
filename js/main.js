@@ -292,6 +292,9 @@ function getExportData(isFinal) {
         data.forEach(function (item, i) {
             var sum = 0;
             var checksum = '';
+            var checksumGold = '';
+            var checksumSilver = '';
+            var checksumBronze = '';
             var checksumRounds = 0;
             if (!data[i].rounds) {
                 data[i].rounds = [];
@@ -337,6 +340,17 @@ function getExportData(isFinal) {
                         if(rule.pointsPriority) {
                             checksum = ('000' + val * 10).slice(-3) + checksum;
                         }
+                        if(rule.goldPriority) {
+                            if(rule.goldRounds && rule.goldRounds.indexOf(j + 1) >= 0) {
+                                checksumGold = ('000' + val * 10).slice(-3) + checksumGold;
+                            }
+                            if(rule.silverRounds && rule.silverRounds.indexOf(j + 1) >= 0) {
+                                checksumSilver = ('000' + val * 10).slice(-3) + checksumSilver;
+                            }
+                            if(rule.bronzeRounds && rule.bronzeRounds.indexOf(j + 1) >= 0) {
+                                checksumBronze = ('000' + val * 10).slice(-3) + checksumBronze;
+                            }
+                        }
                         if(rule.roundsPriority && val === maxRoundValues[j]) {
                             checksumRounds++;
                         }
@@ -348,7 +362,13 @@ function getExportData(isFinal) {
                 }
             });
             data[i].sum = sum;
-            data[i].checksum = rule.roundsPriority ? sum * 10 + ('000' + checksumRounds).slice(-3) + checksum : checksum + sum;
+            data[i].checksum = checksum + sum;
+            if(rule.roundsPriority) {
+                data[i].checksum = sum * 10 + ('000' + checksumRounds).slice(-3) + checksum;
+            }
+            if(rule.goldPriority) {
+                data[i].checksum = sum * 10 + checksumGold + checksumSilver + checksumBronze;
+            }
             data[i].rounds.splice(curRound);
         });
         // Отсортировать по очкам
@@ -359,7 +379,7 @@ function getExportData(isFinal) {
             if (a.sum > b.sum) {
                 return -1;
             }
-            if(rule.roundsPriority) {
+            if(rule.roundsPriority || rule.goldPriority) {
                 if (a.checksum < b.checksum) {
                     return 1;
                 }
@@ -572,7 +592,7 @@ $(function () {
                 align: 'left',
                 width: canvas.width - generalStyle.padding - generalStyle.columnWidth * (2 + rule.roundsCount)
             }).appendTo(tr).text('Команда');
-            rule.rounds.forEach(function (round) {
+            rule.rounds.forEach(function (round, i) {
                 if (typeof round === 'object') {
                     var roundStyle = $.extend({}, {
                         background: style.background,
@@ -602,8 +622,27 @@ $(function () {
                     });
                 }
                 else {
+                    var background = style.tHeaderBackground;
+                    var color = style.tHeaderColor;
+                    if(rule.goldPriority) {
+                        if(rule.goldRounds && rule.goldRounds.indexOf(i + 1) >= 0) {
+                            background = style.gold ? style.gold : background;
+                            color = style.goldColor ? style.goldColor : color;
+                        }
+                        if(rule.silverRounds && rule.silverRounds.indexOf(i + 1) >= 0) {
+                            background = style.silver ? style.silver : background;
+                            color = style.silverColor ? style.silverColor : color;
+                        }
+                        if(rule.bronzeRounds && rule.bronzeRounds.indexOf(i + 1) >= 0) {
+                            background = style.bronze ? style.bronze : background;
+                            color = style.bronzeColor ? style.bronzeColor : color;
+                        }
+                    }
                     $('<th>', {
                         width: generalStyle.columnWidth
+                    }).css({
+                        background: background,
+                        color: color
                     }).appendTo(tr).html(round);
                     roundStyles.push(null);
                 }
@@ -629,6 +668,20 @@ $(function () {
                     if(rule.roundsPriority && maxRoundValues[i] === field) {
                         styles.fontWeight = 'bold';
                         styles.color = style.priorityColor ? style.priorityColor : style.color;
+                    }
+                    if(rule.goldPriority) {
+                        if(rule.goldRounds && rule.goldRounds.indexOf(i + 1) >= 0) {
+                            styles.background = style.gold ? style.gold : style.cellBackground;
+                            styles.color = style.goldColor ? style.goldColor : style.color;
+                        }
+                        if(rule.silverRounds && rule.silverRounds.indexOf(i + 1) >= 0) {
+                            styles.background = style.silver ? style.silver : style.cellBackground;
+                            styles.color = style.silverColor ? style.silverColor : style.color;
+                        }
+                        if(rule.bronzeRounds && rule.bronzeRounds.indexOf(i + 1) >= 0) {
+                            styles.background = style.bronze ? style.bronze : style.cellBackground;
+                            styles.color = style.bronzeColor ? style.bronzeColor : style.color;
+                        }
                     }
                     $('<td>', {
                         align: 'center'

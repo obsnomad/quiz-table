@@ -1,11 +1,11 @@
 var config = {
     styles: {
-        imageWidth: 1920,
-        imageHeight: 1080,
-        columnWidth: 150,
+        imageWidth: 1280,
+        imageHeight: 1024,
+        columnWidth: 80,
         padding: 8,
         //fontStretch: 'ultra-condensed',
-        fontSize: 36
+        fontSize: 30
     },
     rules: [
         {
@@ -41,13 +41,29 @@ var config = {
                 7
             ],
             finalRounds: 2,
+            goldPriority: true,
+            goldRounds: [
+                6
+            ],
+            silverRounds: [
+                5
+            ],
+            bronzeRounds: [
+                2
+            ],
             styles: {
                 fontFamily: 'Oranienbaum, serif',
                 background: '#0f234f',
                 color: '#fff',
                 tHeaderColor: '#d3b458',
                 headerColor: '#c6c6c6',
-                border: '1px solid #2454be'
+                border: '1px solid #2454be',
+                gold: '#ffef36',
+                goldColor: '#000',
+                silver: '#c9cbc9',
+                silverColor: '#000',
+                bronze: '#ce8737',
+                bronzeColor: '#000'
             }
         },
         {
